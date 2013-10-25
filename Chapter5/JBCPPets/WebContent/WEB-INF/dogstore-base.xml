@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+		http://www.springframework.org/schema/jdbc  http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.0.xsd
+	">
+	<!--  Ch 4 PasswordEncoder exercise -->
+	<bean class="org.springframework.security.authentication.encoding.ShaPasswordEncoder" id="passwordEncoder"/>
+	<!--  Ch 4 Salt exercise -->	
+	<bean class="org.springframework.security.authentication.dao.ReflectionSaltSource" id="saltSource">
+		<!-- Ch 4 Salted User -->
+		<property name="userPropertyToUse" value="salt"/>
+	</bean>
+	<bean class="com.packtpub.springsecurity.security.DatabasePasswordSecurerBean" init-method="secureDatabase" depends-on="dataSource">
+		<property name="dataSource" ref="dataSource"/>	
+	</bean>
+
+<!-- Ch 4 UserDetailsManager exercise -->
+<!-- 
+	<bean id="jdbcUserService" class="org.springframework.security.provisioning.JdbcUserDetailsManager">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="authenticationManager" ref="authenticationManager"/>
+	</bean>
+ -->
+ 	<bean id="jdbcUserServiceCustom" class="com.packtpub.springsecurity.security.CustomJdbcDaoImpl">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="enableGroups" value="true"/>
+		<property name="enableAuthorities" value="false"/>
+		<!-- Ch 4 Salted User Exercise -->
+		<property name="usersByUsernameQuery">
+			<value>select username,password,enabled,salt from users where username = ?</value>
+		</property>
+	</bean>
+
+<!-- Ch 5 XML configuration decorators -->
+<!-- 
+	<bean id="userService" class="com.packtpub.springsecurity.service.UserServiceImpl">
+		<security:intercept-methods>
+			<security:protect access="ROLE_ADMIN" method="changePassword"/>
+			<security:protect access="ROLE_USER" method="set*"/>
+		</security:intercept-methods>
+	</bean>
+ -->	
+	<context:annotation-config />
+	<context:component-scan base-package="com.packtpub.springsecurity.dao"/>
+	<context:component-scan base-package="com.packtpub.springsecurity.service"/>
+	<context:component-scan base-package="com.packtpub.springsecurity.security"/>
+
+</beans>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+		http://www.springframework.org/schema/jdbc  http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/security	http://www.springframework.org/schema/security/spring-security-3.0.xsd
+		http://www.springframework.org/schema/util	http://www.springframework.org/schema/util/spring-util-3.0.xsd
+	">
+	<bean class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler" id="expressionHandler"/>
+	<bean class="com.packtpub.springsecurity.security.CustomWebSecurityExpressionHandler" id="customExpressionHandler"/>
+	<bean class="org.springframework.security.web.access.expression.WebExpressionVoter" id="expressionVoter">
+		<property name="expressionHandler" ref="customExpressionHandler"/>
+	</bean>
+	<bean class="org.springframework.security.access.vote.RoleVoter" id="roleVoter"/>
+	<bean class="org.springframework.security.access.vote.AuthenticatedVoter" id="authenticatedVoter"/>
+	
+	<!--  Ch 4 PasswordEncoder exercise -->
+	<bean class="org.springframework.security.authentication.encoding.ShaPasswordEncoder" id="passwordEncoder"/>
+	<!--  Ch 4 Salt exercise -->	
+	<bean class="org.springframework.security.authentication.dao.ReflectionSaltSource" id="saltSource">
+		<!-- Ch 4 Salted User -->
+		<property name="userPropertyToUse" value="salt"/>
+	</bean>
+	<bean class="com.packtpub.springsecurity.security.DatabasePasswordSecurerBean" init-method="secureDatabase" depends-on="dataSource">
+		<property name="dataSource" ref="dataSource"/>	
+	</bean>
+
+ 	<bean id="jdbcUserServiceCustom" class="com.packtpub.springsecurity.security.CustomJdbcDaoImpl">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="enableGroups" value="true"/>
+		<property name="enableAuthorities" value="false"/>
+		<!-- Ch 4 Salted User Exercise -->
+		<property name="usersByUsernameQuery">
+			<value>select username,password,enabled,salt from users where username = ?</value>
+		</property>
+	</bean>
+
+	<!-- Ch 12 Kerberos SPNEGO Style Auth -->
+	<bean id="kerbEntryPoint" class="org.springframework.security.extensions.kerberos.web.SpnegoEntryPoint" />
+	
+	<bean id="kerbAuthenticationProcessingFilter" class="org.springframework.security.extensions.kerberos.web.SpnegoAuthenticationProcessingFilter">
+		<property name="authenticationManager" ref="authenticationManager" />
+	</bean>
+	
+	<bean id="kerberosServiceAuthenticationProvider" class="org.springframework.security.extensions.kerberos.KerberosServiceAuthenticationProvider">
+		<property name="ticketValidator" ref="ticketValidator"/>
+		<property name="userDetailsService" ref="jdbcUserServiceCustom"/>
+		<!-- Ch 12 Kerberos LDAP Auth 
+		<property name="userDetailsService" ref="ldapUserService" />
+		-->
+	</bean>
+	<bean id="ticketValidator" class="org.springframework.security.extensions.kerberos.SunJaasKerberosTicketValidator">
+		<property name="servicePrincipal" value="HTTP/web.jbcppets.com@corp.jbcppets.com" />
+		<property name="keyTabLocation" value="file:c:/projects/spring_book/workspace/JBCPPets/WebContent/WEB-INF/classes/http.keytab" />
+		<!-- 
+		 <property name="keyTabLocation" value="classpath:http.keytab"/>
+		 -->
+		<property name="debug" value="true"/>
+	</bean>
+
+	<!-- Ch 12 Kerberos Form Login Auth -->
+	<!-- 
+	<bean id="kerberosAuthenticationProvider" class="org.springframework.security.extensions.kerberos.KerberosAuthenticationProvider">
+		<property name="kerberosClient" ref="kerbJaasClient"/>
+		<property name="userDetailsService" ref="jdbcUserServiceCustom"/>
+	</bean>
+	<bean id="kerbJaasClient" class="org.springframework.security.extensions.kerberos.SunJaasKerberosClient">
+		<property name="debug" value="true"/>
+	</bean>	
+	<bean id="kerbGlobalJaasConfig" class="org.springframework.security.extensions.kerberos.GlobalSunJaasKerberosConfig">
+		<property name="debug" value="true"/>
+		<property name="krbConfLocation" value="C:/projects/spring_book/Writing/Chapter 12/Code/JBCPPets/JBCPPets/WebContent/WEB-INF/classes/krb5.conf" />
+	</bean>
+ -->
+	<context:annotation-config />
+	<context:component-scan base-package="com.packtpub.springsecurity.dao"/>
+	<context:component-scan base-package="com.packtpub.springsecurity.service"/>
+	<context:component-scan base-package="com.packtpub.springsecurity.security"/>
+
+</beans>

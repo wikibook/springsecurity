@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/jdbc  http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
+		http://www.springframework.org/schema/security 
+		http://www.springframework.org/schema/security/spring-security-3.0.xsd
+	">
+	<!-- Ch 10, need to add entry-point-ref -->
+	<http auto-config="true" use-expressions="true" entry-point-ref="casAuthEntryPoint">
+		<access-denied-handler error-page="/accessDenied.do"/>
+		<intercept-url pattern="/login.do" access="permitAll"/>
+		<!-- Ch 8 Registration -->
+		<intercept-url pattern="/registration.do" access="permitAll"/>
+		<intercept-url pattern="/registrationOpenId.do" access="permitAll"/>
+		<intercept-url pattern="/home.do" access="permitAll"/>
+		<!-- Ch 10 -->
+		<intercept-url pattern="/account/home.do" access="!anonymous"/>
+		<intercept-url pattern="/account/view*Profile.do" access="!anonymous"/>
+		<intercept-url pattern="/account/*.do" access="hasRole('ROLE_USER')"/>
+		<intercept-url pattern="/*" access="hasRole('ROLE_USER')"/>
+		<form-login login-page="/login.do" default-target-url="/"/>
+		<!-- 
+		Ch 9 LDAP enabled - first, we simply remove the remember me service reference. Next, we can update to point to
+		the LDAP UserService.
+		More than one UserDetailsService registered. Please use a specific Id reference in <remember-me/> <openid-login/> or <x509 /> elements.
+		Add user-service-ref="jdbcUserService"
+		 -->
+		<remember-me key="jbcpPetStore" token-validity-seconds="3600" data-source-ref="dataSource"/>
+		<logout invalidate-session="true" logout-success-url="" logout-url="/logout"/>
+
+		<!-- Ch 6 Session Management -->
+		<session-management>
+			<concurrency-control expired-url="/login.do?error=expired"/>
+		</session-management>
+		<!-- Ch 10 CAS Filter -->
+<!--		<custom-filter ref="casAuthenticationFilter" position="CAS_FILTER"/>-->
+	</http>
+
+	<authentication-manager alias="authenticationManager">
+		 <!-- Ch 10 -->
+		 <authentication-provider ref="casAuthenticationProvider"/>
+	</authentication-manager>
+	
+	<!-- Ch 4 In-memory HSQLDB -->	
+	<jdbc:embedded-database id="dataSource" type="HSQL">
+		<jdbc:script location="classpath:security-schema.sql"/>
+		<jdbc:script location="classpath:remember-me-schema.sql"/> 
+		<jdbc:script location="classpath:test-users-groups-data.sql"/>
+		 <!--  Ch 7 ACL  -->
+		 <jdbc:script location="classpath:acl-schema.sql"/> 
+		 <jdbc:script location="classpath:test-acl-data.sql"/> 
+	</jdbc:embedded-database>
+</beans:beans>

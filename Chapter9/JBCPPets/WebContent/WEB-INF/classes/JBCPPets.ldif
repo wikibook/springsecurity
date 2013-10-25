@@ -1,0 +1,129 @@
+version: 1
+
+dn: dc=jbcppets,dc=com
+objectClass: extensibleObject
+objectClass: domain
+objectClass: top
+dc: jbcppets
+
+dn: ou=Groups,dc=jbcppets,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: Groups
+
+dn: ou=Users,dc=jbcppets,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: Users
+
+dn: uid=ldapguest,ou=Users,dc=jbcppets,dc=com
+objectClass: organizationalPerson
+objectClass: person
+objectClass: uidObject
+objectClass: top
+cn: LDAP Guest
+sn: Guest
+uid: ldapguest
+userPassword:: cGFzc3dvcmQ=
+
+dn: ou=Administrators,ou=Users,dc=jbcppets,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: Administrators
+
+dn: uid=ldapadmin,ou=Administrators,ou=Users,dc=jbcppets,dc=com
+objectClass: organizationalPerson
+objectClass: person
+objectClass: uidObject
+objectClass: top
+cn: LDAP Admin
+sn: Admin
+uid: ldapadmin
+userPassword:: cGFzc3dvcmQ=
+
+dn: cn=User,ou=Groups,dc=jbcppets,dc=com
+objectClass: groupOfUniqueNames
+objectClass: top
+cn: User
+uniqueMember: uid=ldapguest,ou=Users,dc=jbcppets,dc=com
+uniqueMember: uid=ldapadmin,ou=Administrators,ou=Users,dc=jbcppets,dc=com
+uniqueMember: uid=shapassworduser,ou=Users,dc=jbcppets,dc=com
+uniqueMember: uid=sshapassworduser,ou=Users,dc=jbcppets,dc=com
+uniqueMember: uid=anotherldapuser,ou=Users,dc=jbcppets,dc=com
+uniqueMember: uid=userwithphone,ou=Users,dc=jbcppets,dc=com
+uniqueMember: uid=shapasswordperson,ou=Users,dc=jbcppets,dc=com
+uniqueMember: uid=shapasswordinetorgperson,ou=Users,dc=jbcppets,dc=com
+
+dn: cn=Admin,ou=Groups,dc=jbcppets,dc=com
+objectClass: groupOfUniqueNames
+objectClass: top
+cn: Admin
+uniqueMember: uid=ldapadmin,ou=Administrators,ou=Users,dc=jbcppets,dc=com
+
+dn: uid=anotherldapuser,ou=Users,dc=jbcppets,dc=com
+objectClass: organizationalPerson
+objectClass: person
+objectClass: uidObject
+objectClass: top
+cn: Another LDAP User
+sn: User
+uid: anotherldapuser
+userPassword:: cGFzc3dvcmQ=
+
+dn: uid=shapassworduser,ou=Users,dc=jbcppets,dc=com
+objectClass: organizationalPerson
+objectClass: person
+objectClass: uidObject
+objectClass: top
+cn: SHA Password User
+sn: User
+uid: shapassworduser
+userPassword:: e1NIQX1XNnBoNU1tNVB6OEdnaVVMYlBnekczN21qOWc9
+
+dn: uid=sshapassworduser,ou=Users,dc=jbcppets,dc=com
+objectClass: organizationalPerson
+objectClass: person
+objectClass: uidObject
+objectClass: top
+cn: SSHA LDAP User
+sn: User
+uid: sshapassworduser
+userPassword:: e1NTSEF9K1lvZm5jWnpyR0ZGL25yRVhBME4yWlRCT0Z4UEdORFRYNDEvZGc9P
+ Q==
+
+dn: uid=userwithphone,ou=Users,dc=jbcppets,dc=com
+objectClass: organizationalPerson
+objectClass: person
+objectClass: uidObject
+objectClass: top
+cn: User With Phone
+sn: Phone
+uid: userwithphone
+telephoneNumber: 1112223333
+
+dn: uid=shapasswordperson,ou=Users,dc=jbcppets,dc=com
+objectClass: organizationalPerson
+objectClass: person
+objectClass: uidObject
+objectClass: top
+cn: SHA Password User
+sn: User
+uid: shapasswordperson
+description: An SHA Password Person
+userPassword:: e1NIQX1XNnBoNU1tNVB6OEdnaVVMYlBnekczN21qOWc9
+
+dn: uid=shapasswordinetorgperson,ou=Users,dc=jbcppets,dc=com
+objectClass: organizationalPerson
+objectClass: person
+objectClass: uidObject
+objectClass: inetOrgPerson
+objectClass: top
+cn: SHA Password User
+sn: User
+uid: shapasswordinetorgperson
+description: An SHA Password inetOrgPerson
+mail: admin@jbcppets.com
+street: 123 JBCP Pets Drive
+telephoneNumber: 1112223333
+userPassword:: e1NIQX1XNnBoNU1tNVB6OEdnaVVMYlBnekczN21qOWc9
+

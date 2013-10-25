@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/jdbc  http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
+		http://www.springframework.org/schema/security 
+		http://www.springframework.org/schema/security/spring-security-3.0.xsd
+	">
+	
+	<http auto-config="true" use-expressions="true">
+		<access-denied-handler error-page="/accessDenied.do"/>
+		<intercept-url pattern="/login.do" access="permitAll"/>
+		<!-- Ch 8 Registration -->
+		<intercept-url pattern="/registration.do" access="permitAll"/>
+		<intercept-url pattern="/registrationOpenId.do" access="permitAll"/>
+		<intercept-url pattern="/home.do" access="permitAll"/>
+		<intercept-url pattern="/account/*.do" access="hasRole('ROLE_USER') and fullyAuthenticated"/>
+		<intercept-url pattern="/*" access="hasRole('ROLE_USER')"/>
+		<form-login login-page="/login.do" default-target-url="/"/>
+		<!-- 
+		Ch 9 LDAP enabled - first, we simply remove the remember me service reference. Next, we can update to point to
+		the LDAP UserService.
+		More than one UserDetailsService registered. Please use a specific Id reference in <remember-me/> <openid-login/> or <x509 /> elements.
+		Add user-service-ref="jdbcUserService"
+		 -->
+		<remember-me key="jbcpPetStore" token-validity-seconds="3600" data-source-ref="dataSource"/>
+		<logout invalidate-session="true" logout-success-url="" logout-url="/logout"/>
+
+		<!-- Ch 6 Session Management -->
+		<session-management>
+			<concurrency-control expired-url="/login.do?error=expired"/>
+		</session-management>
+	</http>
+
+	<!-- Ch 9 LDAP -->
+	<!-- Embedded Server, with Apache DS edited example -->
+	<ldap-server ldif="classpath:JBCPPets.ldif" id="ldapLocal" root="dc=jbcppets,dc=com"/>
+	<!-- 
+	<ldap-server ldif="classpath:example.ldif" id="ldapLocal" root="dc=example,dc=com"/>
+	 --> 
+	<!-- 
+	<ldap-server ldif="classpath:test-server.ldif" id="ldapLocal"  
+	manager-dn="uid=ben,ou=people,dc=springframework,dc=org" manager-password="benspassword"/>
+	-->
+	<!--  
+ 	<ldap-server url="ldap://localhost:10389/dc=jbcppets,dc=com" id="ldapLocal" 
+		manager-dn="uid=admin,ou=system" manager-password="secret"/>
+		 -->
+	<authentication-manager alias="authenticationManager">
+		<authentication-provider user-service-ref="jdbcUserServiceCustom">
+			<password-encoder ref="passwordEncoder">
+				<salt-source ref="saltSource"/>
+			</password-encoder>
+		</authentication-provider>
+		<!-- Ch 9 LDAP (Initial Setup) -->
+		<ldap-authentication-provider server-ref="ldapLocal"
+			user-search-filter="(uid={0})" group-search-base="ou=Groups"/>
+		<!-- Ch 9 LDAP (Password Compare) -->
+		<!-- 
+		<ldap-authentication-provider server-ref="ldapLocal"
+			user-search-filter="(uid={0})" group-search-base="ou=Groups">
+			-->
+		<!-- Ch 9 LDAP (UserDetailsContextMapper: inetOrgPerson) -->
+		<!-- 
+		<ldap-authentication-provider server-ref="ldapLocal"
+			user-search-filter="(uid={0})" group-search-base="ou=Groups"
+			user-details-class="inetOrgPerson">
+			 -->
+			<!-- 
+			user-search-filter="(sAMAccountName={0})" group-search-base="cn=Users"
+			user-details-class="inetOrgPerson">
+			<password-compare hash="{sha}"/>
+			 -->
+			<!--  for SSHA test
+			<password-compare hash="{ssha}"/>
+			 -->
+			<!-- Example for password-attribute usage
+			<password-compare hash="plaintext" password-attribute="telephoneNumber"/>
+			 -->
+			 <!-- Example alternate syntax
+			 <password-compare>
+			 	<password-encoder hash="plaintext"/>
+			 </password-compare>
+			  -->
+			  <!-- 
+		</ldap-authentication-provider>
+		 -->
+		<!-- user-search-filter is required, even though it's marked as optional in the schema -->
+				 <!-- 
+			<ldap-user-service id="ldapUserService" server-ref="ldapLocal" 
+				user-search-filter="(uid={0})" user-search-base="dc=springsource,dc=org"
+				group-search-base="ou=Groups,dc=springsource,dc=org"/>
+				 -->
+		<!--
+		Ch 9 LDAP Explicit Configuration 
+		<authentication-provider ref="ldapAuthProvider"/>
+		 -->
+	</authentication-manager>
+	
+	<!-- Ch 9 LDAP UserDetailsService -->
+	<!-- 
+	<ldap-user-service id="ldapUserService" server-ref="ldapLocal" 
+		user-search-filter="(uid={0})" group-search-base="ou=Groups"/>
+	 -->
+	 
+	<!-- Ch 4 In-memory HSQLDB -->	
+	<jdbc:embedded-database id="dataSource" type="HSQL">
+		<jdbc:script location="classpath:security-schema.sql"/>
+		<jdbc:script location="classpath:remember-me-schema.sql"/> 
+		<jdbc:script location="classpath:test-users-groups-data.sql"/>
+		 <!--  Ch 7 ACL  -->
+		 <jdbc:script location="classpath:acl-schema.sql"/> 
+		 <jdbc:script location="classpath:test-acl-data.sql"/> 
+	</jdbc:embedded-database>
+</beans:beans>

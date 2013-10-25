@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/jdbc  http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+	">
+ <!-- Ch 2 Custom AccessDecisionManager 
+	<bean class="org.springframework.security.access.vote.UnanimousBased" id="unanimousBased">
+		<property name="decisionVoters">
+			<list>
+				<ref bean="roleVoter"/>
+				<ref bean="authenticatedVoter"/>
+			</list>
+		</property>
+	</bean>
+	<bean class="org.springframework.security.access.vote.RoleVoter" id="roleVoter"/>
+	<bean class="org.springframework.security.access.vote.AuthenticatedVoter" id="authenticatedVoter"/>
+	 -->
+	<!-- Ch 3 IP Based Remember Me Services -->
+	<bean class="com.packtpub.springsecurity.security.IPTokenBasedRememberMeServices" id="ipTokenBasedRememberMeServicesBean">
+		<property name="key"><value>jbcpPetStore</value></property>
+		<property name="userDetailsService" ref="userService"/>
+		<!-- To experiment with changing the checkbox name and cookie name -->
+		<!-- 
+		<property name="parameter"><value>_remember_me</value></property>
+		<property name="cookieName"><value>REMEMBER_ME</value></property>
+		 -->
+	</bean>
+	<bean id="userService" class="com.packtpub.springsecurity.security.InMemoryChangePasswordDaoImpl">
+		<property name="userProperties">
+			<props>
+				<prop key="guest">guest,ROLE_USER</prop>
+			</props>
+		</property>
+	</bean>
+	
+	<context:annotation-config />
+	<context:component-scan base-package="com.packtpub.springsecurity"/>
+
+</beans>

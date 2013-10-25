@@ -1,0 +1,42 @@
+body {
+	font-family: Verdana, Arial, Helvetica;
+	font-size: 1em;
+}
+#header {
+	background-color: #A8987D;
+}
+#header ul {
+	margin: 0px;
+	padding: 4px 2px;
+}
+#header ul li {
+	float: left;
+	list-style: none;
+	margin-left: 10px;
+	display: block;
+}
+#header ul li a {
+	color: white;
+	text-decoration: none;
+}
+#header ul li a:hover {
+	font-weight: bold;
+}
+#header br {
+	clear: both;
+	zoom: 1;
+}
+#header .username {
+	color: white;
+	text-align: right;
+	float: right;
+}
+h1 {
+	color: #32465B;	
+}
+a {
+	color: #32465B;
+}
+a:visited {
+	color: #5B503B;
+}

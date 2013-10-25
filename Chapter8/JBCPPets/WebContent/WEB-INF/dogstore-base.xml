@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+		http://www.springframework.org/schema/jdbc  http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/security	http://www.springframework.org/schema/security/spring-security-3.0.xsd
+		http://www.springframework.org/schema/util	http://www.springframework.org/schema/util/spring-util-3.0.xsd
+	">
+	<!-- Start Ch 7 ACL Configuration -->
+
+	<!-- Ch 7 ACL Voter -->
+	<bean class="org.springframework.security.access.vote.AffirmativeBased" id="aclDecisionManager">
+		<property name="decisionVoters">
+			<list>
+				<ref bean="categoryReadVoter"/>
+				<!-- Ch 7 Custom permission scenario -->
+				<ref bean="adminResourceReadVoter"/>
+			</list>
+		</property>
+	</bean>
+	<bean class="org.springframework.security.acls.AclEntryVoter" id="categoryReadVoter">
+	<!--
+    public AclEntryVoter(AclService aclService, String processConfigAttribute, Permission[] requirePermission) {
+		-->
+		<!--  
+		<constructor-arg ref="aclService"/>
+		-->
+		<constructor-arg ref="mutableAclService"/>
+		<constructor-arg value="VOTE_CATEGORY_READ"/>
+		<constructor-arg>
+			<array>
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ"/>
+			</array>
+		</constructor-arg>
+		<property name="processDomainObjectClass" value="com.packtpub.springsecurity.data.Category"/>
+	</bean>
+
+	<bean class="org.springframework.security.acls.AclEntryVoter" id="adminResourceReadVoter">
+		<!--  
+		<constructor-arg ref="aclService"/>
+		-->
+		<constructor-arg ref="mutableAclService"/>
+		<constructor-arg value="VOTE_ADMIN_READ"/>
+		<constructor-arg>
+			<array>
+				<util:constant static-field="com.packtpub.springsecurity.security.CustomPermission.ADMIN_READ"/>
+			</array>
+		</constructor-arg>
+		<property name="processDomainObjectClass" value="com.packtpub.springsecurity.data.Category"/>
+	</bean>
+
+	<bean class="org.springframework.security.acls.jdbc.JdbcMutableAclService" id="mutableAclService">
+	<!--
+    public JdbcMutableAclService(DataSource dataSource, LookupStrategy lookupStrategy, AclCache aclCache) {
+		-->
+		<constructor-arg ref="dataSource"/>
+		<constructor-arg ref="lookupStrategy"/>
+		<constructor-arg ref="aclCache"/>
+	</bean>
+	<bean class="org.springframework.security.acls.jdbc.BasicLookupStrategy" id="lookupStrategy">
+	<!--
+    public BasicLookupStrategy(DataSource dataSource, AclCache aclCache,
+        AclAuthorizationStrategy aclAuthorizationStrategy, AuditLogger auditLogger) {	
+	-->
+		<constructor-arg ref="dataSource"/>
+		<!-- Ch 7 Null Cache -->
+		<!-- 
+		<constructor-arg ref="aclCache"/>
+		 --> 
+		<!-- Ch 7 Ehcache -->
+		<constructor-arg ref="ehCacheAclCache"/>
+		<constructor-arg ref="aclAuthzStrategy"/>
+		<constructor-arg ref="aclAuditLogger"/>
+		<!-- Ch 7 custom permisison factory -->
+		<property name="permissionFactory" ref="customPermissionFactory"/>
+	</bean>
+	
+	<bean class="com.packtpub.springsecurity.security.CustomPermissionFactory" id="customPermissionFactory"/>
+	
+	<bean class="com.packtpub.springsecurity.security.NullAclCache" id="aclCache"/>
+
+	<!-- Ch 7 Mutable ACL Service -->
+	<!-- 
+	<bean class="org.springframework.security.acls.jdbc.JdbcAclService" id="aclService">
+	<!- -
+    public JdbcAclService(DataSource dataSource, LookupStrategy lookupStrategy) {
+		- ->
+		<constructor-arg ref="dataSource"/>
+		<constructor-arg ref="lookupStrategy"/>
+	</bean>
+	 -->
+
+	<!-- Ch 7 ACL Caching -->
+	<bean class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" id="ehCacheManagerBean"/>
+	<bean class="org.springframework.cache.ehcache.EhCacheFactoryBean" id="ehCacheFactoryBean">
+		<property name="cacheManager" ref="ehCacheManagerBean"/>
+		<property name="cacheName" value="springAclCacheRegion"/>
+	</bean>
+	<bean class="org.springframework.security.acls.domain.EhCacheBasedAclCache" id="ehCacheAclCache">
+		<constructor-arg ref="ehCacheFactoryBean"/>
+	</bean>
+	
+
+	<bean class="org.springframework.security.acls.domain.AclAuthorizationStrategyImpl" id="aclAuthzStrategy">
+	<!-- 
+	     public AclAuthorizationStrategyImpl(GrantedAuthority[] auths) {
+        Assert.isTrue(auths != null && auths.length == 3, "GrantedAuthority[] with three elements required");
+        this.gaTakeOwnership = auths[0];
+        this.gaModifyAuditing = auths[1];
+        this.gaGeneralChanges = auths[2];
+    }
+	 -->
+		<constructor-arg>
+			<array>
+				<ref local="aclAdminAuthority"/>
+				<ref local="aclAdminAuthority"/>
+				<ref local="aclAdminAuthority"/>
+			</array>
+		</constructor-arg>
+	</bean>	
+	<bean class="org.springframework.security.acls.domain.ConsoleAuditLogger" id="aclAuditLogger"/>
+	<bean class="org.springframework.security.core.authority.GrantedAuthorityImpl" id="aclAdminAuthority">
+		<constructor-arg value="ROLE_ADMIN"/>
+	</bean>
+	
+	<!-- End Ch 7 ACL Configuration -->
+	
+	<bean class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler" id="expressionHandler"/>
+	<bean class="com.packtpub.springsecurity.security.CustomWebSecurityExpressionHandler" id="customExpressionHandler"/>
+	<bean class="org.springframework.security.web.access.expression.WebExpressionVoter" id="expressionVoter">
+		<property name="expressionHandler" ref="customExpressionHandler"/>
+	</bean>
+	<bean class="org.springframework.security.access.vote.RoleVoter" id="roleVoter"/>
+	<bean class="org.springframework.security.access.vote.AuthenticatedVoter" id="authenticatedVoter"/>
+	
+	<!--  Ch 4 PasswordEncoder exercise -->
+	<bean class="org.springframework.security.authentication.encoding.ShaPasswordEncoder" id="passwordEncoder"/>
+	<!--  Ch 4 Salt exercise -->	
+	<bean class="org.springframework.security.authentication.dao.ReflectionSaltSource" id="saltSource">
+		<!-- Ch 4 Salted User -->
+		<property name="userPropertyToUse" value="salt"/>
+	</bean>
+	<bean class="com.packtpub.springsecurity.security.DatabasePasswordSecurerBean" init-method="secureDatabase" depends-on="dataSource">
+		<property name="dataSource" ref="dataSource"/>	
+	</bean>
+
+	<!-- Ch 6 Custom Auth Filter -->
+	<!-- 
+	<bean id="ipFilter" class="com.packtpub.springsecurity.security.IPRoleAuthenticationFilter">
+		<property name="targetRole" value="ROLE_ADMIN"/>
+		<property name="allowedIPAddresses">
+			<list>
+				<value>1.2.3.4</value>
+			</list>
+		</property>
+	</bean>
+	 -->
+	 
+ 	<bean id="jdbcUserServiceCustom" class="com.packtpub.springsecurity.security.CustomJdbcDaoImpl">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="enableGroups" value="true"/>
+		<property name="enableAuthorities" value="false"/>
+		<!-- Ch 4 Salted User Exercise -->
+		<property name="usersByUsernameQuery">
+			<value>select username,password,enabled,salt from users where username = ?</value>
+		</property>
+	</bean>
+
+	 <!-- Ch 6 Request Header Filter -->
+	 <bean id="requestHeaderFilter" class="com.packtpub.springsecurity.security.RequestHeaderProcessingFilter">
+	 	<property name="authenticationManager" ref="authenticationManager"/>
+	 </bean>
+	<bean id="signedRequestAuthenticationProvider" class="com.packtpub.springsecurity.security.SignedUsernamePasswordAuthenticationProvider">
+		<property name="passwordEncoder" ref="passwordEncoder"/>
+		<property name="saltSource" ref="saltSource"/>
+		<property name="userDetailsService" ref="jdbcUserServiceCustom"/>
+	</bean>
+	 	
+	<!-- Ch 8 OpenID Registration -->
+	<bean id="openIdAuthFailureHandler" class="com.packtpub.springsecurity.security.OpenIDAuthenticationFailureHandler">
+		<property name="defaultFailureUrl" value="/login.do"/>
+	</bean>
+	<context:annotation-config />
+	<context:component-scan base-package="com.packtpub.springsecurity.dao"/>
+	<context:component-scan base-package="com.packtpub.springsecurity.service"/>
+	<context:component-scan base-package="com.packtpub.springsecurity.security"/>
+
+</beans>

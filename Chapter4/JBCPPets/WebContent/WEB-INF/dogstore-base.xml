@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/jdbc  http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+	">
+	<!--  Ch 4 PasswordEncoder exercise -->
+	<bean class="org.springframework.security.authentication.encoding.ShaPasswordEncoder" id="passwordEncoder"/>
+	<!--  Ch 4 Salt exercise -->	
+	<bean class="org.springframework.security.authentication.dao.ReflectionSaltSource" id="saltSource">
+	<!-- 
+		<property name="userPropertyToUse" value="username"/>
+		 -->
+		<!-- Ch 4 Salted User -->
+		<property name="userPropertyToUse" value="salt"/>
+	</bean>
+	<!-- Ch 4 Salt Exercise 
+	<bean class="com.packtpub.springsecurity.security.DatabasePasswordSecurerBean" init-method="secureDatabase" depends-on="dataSource">
+		<property name="dataSource" ref="dataSource"/>	
+	</bean>
+	 -->
+
+<!-- Ch 4 UserDetailsManager exercise -->
+<!-- 
+	<bean id="jdbcUserService" class="org.springframework.security.provisioning.JdbcUserDetailsManager">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="authenticationManager" ref="authenticationManager"/>
+	</bean>
+ -->
+ <!-- 
+ 	<bean id="jdbcUserServiceCustom" class="com.packtpub.springsecurity.security.CustomJdbcDaoImpl">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+		 -->
+		<!-- Ch 4 Enable Groups Exercise -->
+		<!-- 
+		<property name="enableGroups" value="true"/>
+		<property name="enableAuthorities" value="false"/>
+		 -->
+		<!-- Ch 4 Salted User Exercise -->
+		<!-- 		
+		<property name="usersByUsernameQuery">
+			<value>select username,password,enabled,salt from users where username = ?</value>
+		</property>
+		 -->
+		<!-- Sample custom schema 
+		<property name="usersByUsernameQuery">
+			<value>SELECT LOGIN, PASSWORD, 1 FROM USER_INFO WHERE LOGIN = ?</value>
+		</property>
+		<property name="groupAuthoritiesByUsernameQuery">
+			<value>SELECT G.GROUP_ID, G.GROUP_NAME, P.NAME 
+				FROM USER_INFO U
+				 JOIN USER_GROUP UG on U.USER_INFO_ID = UG.USER_INFO_ID
+				 JOIN GROUP G ON UG.GROUP_ID = G.GROUP_ID
+				 JOIN GROUP_PERMISSION GP ON G.GROUP_ID = GP.GROUP_ID
+				 JOIN PERMISSION P ON GP.PERMISSION_ID = P.PERMISSION_ID
+				WHERE U.LOGIN = ?</value>
+		</property>
+		 -->
+		 <!-- 
+	</bean>
+	 -->		
+	<context:annotation-config />
+	<context:component-scan base-package="com.packtpub.springsecurity"/>
+
+</beans>
